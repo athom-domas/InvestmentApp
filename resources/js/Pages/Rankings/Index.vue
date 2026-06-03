@@ -7,6 +7,7 @@ import FactorBar from '@/Components/FactorBar.vue'
 import Pagination from '@/Components/Pagination.vue'
 import EmptyState from '@/Components/EmptyState.vue'
 import SecuritySearchInput from '@/Components/SecuritySearchInput.vue'
+import DisclaimerBox from '@/Components/DisclaimerBox.vue'
 
 const props = defineProps({
     rankings: { type: Object, default: null },
@@ -84,6 +85,8 @@ const fmtScore = (v) => (v !== null && v !== undefined) ? Number(v).toFixed(0) :
         </template>
 
         <div class="mx-auto max-w-7xl space-y-4 px-4 py-6 sm:px-6 lg:px-8">
+            <DisclaimerBox />
+
             <!-- Filters -->
             <div class="rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-100">
                 <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">

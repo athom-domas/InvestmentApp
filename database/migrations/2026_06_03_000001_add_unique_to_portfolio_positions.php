@@ -1,0 +1,21 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    public function up(): void
+    {
+        Schema::table('portfolio_positions', function (Blueprint $table) {
+            $table->unique(['portfolio_id', 'security_id'], 'portfolio_positions_unique');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('portfolio_positions', function (Blueprint $table) {
+            $table->dropUnique('portfolio_positions_unique');
+        });
+    }
+};

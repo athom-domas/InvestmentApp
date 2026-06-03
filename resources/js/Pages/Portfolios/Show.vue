@@ -4,6 +4,7 @@ import { Head, Link, router, useForm } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import ScoreBadge from '@/Components/ScoreBadge.vue'
 import EmptyState from '@/Components/EmptyState.vue'
+import DisclaimerBox from '@/Components/DisclaimerBox.vue'
 
 const props = defineProps({
     portfolio:     { type: Object, required: true },
@@ -132,6 +133,7 @@ const fmtScore = (n) => {
         </template>
 
         <div class="mx-auto max-w-7xl space-y-5 px-4 py-6 sm:px-6 lg:px-8">
+            <DisclaimerBox />
 
             <!-- Add position form -->
             <div v-if="showAddForm" class="rounded-lg bg-white p-5 shadow-sm ring-1 ring-slate-100">

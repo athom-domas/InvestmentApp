@@ -4,6 +4,7 @@ import { Head, Link, router, useForm } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import ScoreBadge from '@/Components/ScoreBadge.vue'
 import EmptyState from '@/Components/EmptyState.vue'
+import DisclaimerBox from '@/Components/DisclaimerBox.vue'
 
 const props = defineProps({
     watchlist:    { type: Object, required: true },
@@ -58,6 +59,8 @@ const getRanking = (securityId) => props.rankings[securityId] ?? null
         </template>
 
         <div class="mx-auto max-w-5xl space-y-4 px-4 py-6 sm:px-6 lg:px-8">
+            <DisclaimerBox />
+
             <!-- Add form -->
             <div v-if="showAddForm" class="rounded-lg bg-white p-5 shadow-sm ring-1 ring-slate-100">
                 <h2 class="mb-4 text-sm font-semibold text-slate-700">Aggiungi azione</h2>
