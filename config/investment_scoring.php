@@ -5,6 +5,10 @@ return [
 
     'default_universe' => 'ALL',
 
+    'scheduled_run_enabled'  => env('SCORING_SCHEDULE_ENABLED', true),
+    'scheduled_run_time'     => env('SCORING_SCHEDULE_TIME', '06:00'),
+    'scheduled_universe'     => env('SCORING_SCHEDULE_UNIVERSE', 'ALL'),
+
     'factor_weights' => [
         'quality'            => 0.25,
         'value'              => 0.20,

@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\RunScoringJob;
 use App\Services\Scoring\ScoringEngine;
 use Illuminate\Console\Command;
 
@@ -11,7 +12,8 @@ class ScoringRun extends Command
         {--universe=ALL    : Exchange code filter (NASDAQ, NYSE, MIL) or ALL}
         {--model-version=  : Override config model version}
         {--limit=          : Score only the first N active securities}
-        {--dry-run         : Compute without persisting to database}';
+        {--dry-run         : Compute without persisting to database}
+        {--queue           : Dispatch as a background job instead of running synchronously}';
 
     protected $description = 'Run the scoring engine and compute security rankings';
 
@@ -23,6 +25,16 @@ class ScoringRun extends Command
             'limit'         => $this->option('limit') ? (int) $this->option('limit') : null,
             'dry_run'       => (bool) $this->option('dry-run'),
         ];
+
+        if ($this->option('queue')) {
+            if ($options['dry_run']) {
+                $this->error('--dry-run is not supported with --queue.');
+                return self::FAILURE;
+            }
+            RunScoringJob::dispatch($options['universe'], $options['model_version']);
+            $this->info('Scoring job dispatched to queue [universe=' . $options['universe'] . '].');
+            return self::SUCCESS;
+        }
 
         $this->info(sprintf(
             'Starting scoring run [universe=%s, version=%s%s]…',
