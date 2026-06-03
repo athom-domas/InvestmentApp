@@ -14,6 +14,7 @@ readonly class SecurityScoreResult
         public array  $factor_results,
         public array  $normalized,
         public string $summary,
-        public string $risks,
+        public array  $reasons,
+        public array  $risks,
     ) {}
 }

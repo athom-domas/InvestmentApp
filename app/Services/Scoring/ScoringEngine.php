@@ -110,6 +110,7 @@ class ScoringEngine
                 factor_results: $factorResults,
                 normalized:     $normalized,
                 summary:        $explanation['summary'],
+                reasons:        $explanation['reasons'],
                 risks:          $explanation['risks'],
             );
         }
@@ -152,7 +153,8 @@ class ScoringEngine
                     'financial_strength_score' => $n['financial_strength'] ?? null,
                     'risk_score'               => $n['risk']               ?? null,
                     'summary'                  => $sr->summary,
-                    'risks'                    => $sr->risks,
+                    'risks'                    => implode("\n", $sr->risks),
+                    'metadata'                 => json_encode(['reasons' => $sr->reasons, 'risks' => $sr->risks]),
                     'created_at'               => $now,
                     'updated_at'               => $now,
                 ];

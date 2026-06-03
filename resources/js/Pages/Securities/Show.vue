@@ -72,6 +72,15 @@ const removeFromWatchlist = (watchlistId) => {
 }
 
 const isInWatchlist = (watchlistId) => props.inWatchlistIds.includes(watchlistId)
+
+const rankingReasons = computed(() => props.ranking?.metadata?.reasons ?? [])
+
+const rankingRisks = computed(() => {
+    if (!props.ranking) return []
+    const meta = props.ranking.metadata
+    if (Array.isArray(meta?.risks)) return meta.risks
+    return (props.ranking.risks ?? '').split('\n').filter(Boolean)
+})
 </script>
 
 <template>
@@ -164,10 +173,20 @@ const isInWatchlist = (watchlistId) => props.inWatchlistIds.includes(watchlistId
                         <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
                             Perché è emersa dallo screening
                         </h2>
-                        <p class="text-sm text-slate-700 leading-relaxed">{{ ranking.summary }}</p>
+                        <p class="mb-3 text-sm text-slate-700 leading-relaxed">{{ ranking.summary }}</p>
+                        <ul v-if="rankingReasons.length" class="space-y-1.5">
+                            <li
+                                v-for="(reason, i) in rankingReasons"
+                                :key="i"
+                                class="flex items-start gap-2 text-sm text-slate-600"
+                            >
+                                <span class="mt-0.5 shrink-0 font-bold text-indigo-400">•</span>
+                                <span>{{ reason }}</span>
+                            </li>
+                        </ul>
                     </div>
 
-                    <RiskBadge :risks="ranking.risks" />
+                    <RiskBadge :risks="rankingRisks" />
                 </div>
 
                 <!-- Factor breakdown -->
