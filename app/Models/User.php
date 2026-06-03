@@ -18,11 +18,6 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -36,13 +31,13 @@ class User extends Authenticatable
         return $this->hasMany(Watchlist::class);
     }
 
-    public function portafogli(): HasMany
+    public function portfolios(): HasMany
     {
-        return $this->hasMany(Portafoglio::class);
+        return $this->hasMany(Portfolio::class);
     }
 
-    public function logAudit(): HasMany
+    public function auditLogs(): HasMany
     {
-        return $this->hasMany(LogAudit::class);
+        return $this->hasMany(AuditLog::class);
     }
 }

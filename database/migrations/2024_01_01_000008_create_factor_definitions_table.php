@@ -7,16 +7,19 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('watchlists', function (Blueprint $table) {
+        Schema::create('factor_definitions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->string('code')->unique();
             $table->string('name');
+            $table->text('description')->nullable();
+            $table->decimal('weight', 8, 4)->default(0);
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('watchlists');
+        Schema::dropIfExists('factor_definitions');
     }
 };

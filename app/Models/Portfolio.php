@@ -5,10 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Watchlist extends Model
+class Portfolio extends Model
 {
     use HasFactory;
 
@@ -19,15 +18,8 @@ class Watchlist extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function items(): HasMany
+    public function positions(): HasMany
     {
-        return $this->hasMany(WatchlistItem::class);
-    }
-
-    public function securities(): BelongsToMany
-    {
-        return $this->belongsToMany(Security::class, 'watchlist_items')
-            ->withPivot('notes')
-            ->withTimestamps();
+        return $this->hasMany(PortfolioPosition::class);
     }
 }
