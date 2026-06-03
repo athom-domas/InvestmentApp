@@ -8,6 +8,8 @@ RUN apk add --no-cache \
     freetype-dev \
     libzip-dev \
     icu-dev \
+    nodejs \
+    npm \
     && rm -rf /var/cache/apk/*
 
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg && \
