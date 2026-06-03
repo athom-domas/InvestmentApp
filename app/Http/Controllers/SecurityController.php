@@ -8,12 +8,13 @@ use App\Models\ModelRun;
 use App\Models\PriceBar;
 use App\Models\Security;
 use App\Models\SecurityRanking;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class SecurityController extends Controller
 {
-    public function show(Security $security): Response
+    public function show(Request $request, Security $security): Response
     {
         $security->load([
             'exchange:id,code,name,currency',
@@ -49,13 +50,27 @@ class SecurityController extends Controller
             ->reverse()
             ->values();
 
+        $userWatchlists = $request->user()
+            ->watchlists()
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        $inWatchlistIds = $request->user()
+            ->watchlists()
+            ->whereHas('securities', fn($q) => $q->where('securities.id', $security->id))
+            ->pluck('watchlists.id')
+            ->toArray();
+
         return Inertia::render('Securities/Show', [
-            'security'     => $security,
-            'modelRun'     => $modelRun?->only(['id', 'model_version', 'finished_at']),
-            'ranking'      => $ranking,
-            'factorValues' => $factorValues,
-            'fundamentals' => $fundamentals,
-            'priceBars'    => $priceBars,
+            'security'       => $security,
+            'modelRun'       => $modelRun?->only(['id', 'model_version', 'finished_at']),
+            'ranking'        => $ranking,
+            'factorValues'   => $factorValues,
+            'fundamentals'   => $fundamentals,
+            'priceBars'      => $priceBars,
+            'watchlists'     => $userWatchlists,
+            'inWatchlistIds' => $inWatchlistIds,
         ]);
     }
 }

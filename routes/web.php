@@ -13,7 +13,7 @@ Route::get('/', function () {
     if (auth()->check()) {
         return redirect()->route('dashboard');
     }
-    return Inertia::render('Welcome', [
+    return Inertia::render('Landing', [
         'canLogin'    => Route::has('login'),
         'canRegister' => Route::has('register'),
     ]);

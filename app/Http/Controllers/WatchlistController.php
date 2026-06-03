@@ -54,9 +54,16 @@ class WatchlistController extends Controller
                 ->keyBy('security_id');
         }
 
+        $allSecurities = Security::where('is_active', true)
+            ->select('id', 'ticker', 'name', 'exchange_id')
+            ->with('exchange:id,code')
+            ->orderBy('ticker')
+            ->get();
+
         return Inertia::render('Watchlists/Show', [
-            'watchlist' => $watchlist,
-            'rankings'  => $rankings,
+            'watchlist'     => $watchlist,
+            'rankings'      => $rankings,
+            'allSecurities' => $allSecurities,
         ]);
     }
 
@@ -68,7 +75,7 @@ class WatchlistController extends Controller
             $validated['security_id'] => ['notes' => $validated['notes'] ?? null],
         ]);
 
-        return redirect()->back();
+        return redirect()->back()->with('success', 'Azione aggiunta alla watchlist.');
     }
 
     public function removeItem(Watchlist $watchlist, Security $security): RedirectResponse
@@ -77,6 +84,6 @@ class WatchlistController extends Controller
 
         $watchlist->securities()->detach($security->id);
 
-        return redirect()->back();
+        return redirect()->back()->with('success', 'Azione rimossa dalla watchlist.');
     }
 }
