@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat > /dev/null; C=$(git status --short --untracked-files=no 2>/dev/null | grep -v PROJECT_STATUS.md | wc -l | tr -d ' '); S=$(git status --short PROJECT_STATUS.md 2>/dev/null | wc -l | tr -d ' '); [ \"$C\"  -gt 0 ] && [ \"$S\" -eq 0 ] && printf '%s' '{\"continue\":false,\"stopReason\":\"Aggiorna PROJECT_STATUS.md prima di concludere.\"}' || true"
+          }
+        ]
+      }
+    ]
+  }
+}
