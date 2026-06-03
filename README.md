@@ -1,138 +1,225 @@
 # Investment Intelligence
 
-Stock screener and portfolio tracker. Laravel 13 + Inertia.js + Vue 3 + Tailwind CSS, running in Docker.
+Screener azionario con ranking spiegabile, watchlist e monitoraggio portafoglio.
+I punteggi sono calcolati su sei fattori quantitativi (qualità, valore, crescita, momentum, solidità finanziaria, rischio) e accompagnati da spiegazioni in linguaggio semplice.
+
+> **Finalità informativa.** Questo progetto mostra analisi e ranking a scopo esclusivamente informativo.
+> Non fornisce consulenza finanziaria personalizzata, non promette rendimenti e non sostituisce
+> un consulente finanziario abilitato.
+
+---
+
+## Funzionalità
+
+| Area | Cosa fa |
+|---|---|
+| **Ranking** | Elenco titoli ordinati per punteggio con fattori e spiegazione |
+| **Dettaglio titolo** | Score breakdown, fondamentali, prezzi storici, spiegazione testuale |
+| **Watchlist** | Salva titoli interessanti da monitorare |
+| **Portafoglio** | Traccia posizioni, calcola esposizione settoriale e valutazione |
+| **Scoring engine** | Calcola ranking su richiesta o in automatico via scheduler |
 
 ---
 
 ## Stack
 
-| Layer | Technology |
+| Layer | Tecnologia |
 |---|---|
 | Backend | Laravel 13, PHP 8.3 |
-| Frontend | Vue 3, Inertia.js, Tailwind CSS |
-| Database | MySQL 8 (dev/prod), SQLite in-memory (tests) |
-| Queue / Cache | MySQL (`database` driver — no Redis required) |
+| Frontend | Vue 3, Inertia.js, Tailwind CSS, Vite |
+| Database | MySQL 8 (dev/prod), SQLite in-memory (test) |
+| Code/Cache | MySQL (`database` driver — Redis opzionale) |
 | Mail | Mailpit (dev) |
 
 ---
 
-## Setup
+## Setup locale (Docker — consigliato)
 
 ```bash
-make up            # start all containers
-make migrate       # run migrations
-make seed          # seed demo data
+make up             # avvia tutti i container
+make migrate-fresh  # migra e popola con dati demo
 ```
 
 App: `http://localhost` · phpMyAdmin: `http://localhost:8080` · Mailpit: `http://localhost:8025`
 
----
-
-## Development
+Avvia il dev server completo (Laravel + Vite HMR + queue + pail):
 
 ```bash
-docker compose exec app composer dev   # Laravel + Vite + queue + pail in one
-make npm-dev                            # Vite HMR only
-make logs                               # tail app logs
-make shell                              # sh into the app container
+docker compose exec app composer dev
+```
+
+Oppure singolarmente:
+
+```bash
+make npm-dev    # solo Vite HMR su :5173
+make logs       # tail log applicazione
+make shell      # sh nel container app
 ```
 
 ---
 
-## Testing
+## Setup bare-metal (senza Docker)
 
-Tests use SQLite in-memory — no setup needed.
+Prerequisiti: PHP 8.3, Composer, Node.js 20+, MySQL 8.
 
 ```bash
-make test                              # full suite
-make test-filter filter=NormalizerTest # single test/class
+composer install
+cp .env.example .env
+php artisan key:generate
+```
+
+Crea il database MySQL, poi configura `.env` (vedi sezione sotto), poi:
+
+```bash
+php artisan migrate --seed
+npm install
+npm run dev          # terminale 1 — Vite HMR
+php artisan serve    # terminale 2 — Laravel su :8000
+php artisan queue:work  # terminale 3 — worker code (opzionale)
 ```
 
 ---
 
-## Scoring Engine
-
-The scoring engine computes factor-based rankings for all active securities.
-
-### Run manually (synchronous)
-
-```bash
-make artisan cmd="scoring:run"
-make artisan cmd="scoring:run --universe=NASDAQ"
-make artisan cmd="scoring:run --limit=50 --dry-run"
-```
-
-| Option | Default | Description |
-|---|---|---|
-| `--universe` | `ALL` | Exchange filter: `ALL`, `NASDAQ`, `NYSE`, `MIL`, … |
-| `--model-version` | config | Override the model version string |
-| `--limit` | — | Score only the first N active securities |
-| `--dry-run` | false | Compute without persisting to DB |
-| `--queue` | false | Dispatch as background job (see below) |
-
-### Run via queue
-
-```bash
-make artisan cmd="scoring:run --queue"
-make artisan cmd="scoring:run --queue --universe=NYSE"
-```
-
-Dispatches `RunScoringJob` to the queue. A worker must be running to process it.
-
-### Queue worker
-
-```bash
-make queue-work
-# or, inside the container:
-docker compose exec app php artisan queue:work --tries=1 --timeout=660
-```
-
-`QUEUE_CONNECTION=database` by default — no Redis required.
-
-### Scheduled automatic runs
-
-The scheduler runs `scoring:run` daily via Laravel's task scheduler.
-
-**Default schedule:** every day at 06:00.
-
-Configure via `.env`:
+## Configurazione .env (MySQL)
 
 ```env
-SCORING_SCHEDULE_ENABLED=true     # set to false to disable
-SCORING_SCHEDULE_TIME=06:00       # HH:MM (24h)
-SCORING_SCHEDULE_UNIVERSE=ALL     # universe filter
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=investment_intelligence
+DB_USERNAME=root
+DB_PASSWORD=
+
+QUEUE_CONNECTION=database   # nessun Redis richiesto
+CACHE_STORE=file            # oppure database; Redis opzionale
 ```
 
-Add a system cron entry that calls the Laravel scheduler every minute:
+Per abilitare Redis (opzionale, migliora le performance cache):
 
-```cron
-# From the host (Docker):
-* * * * * cd /path/to/project && docker compose exec -T app php artisan schedule:run >> /dev/null 2>&1
-
-# Or from inside the container:
-* * * * * cd /var/www/html && php artisan schedule:run >> /dev/null 2>&1
+```env
+CACHE_STORE=redis
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
 ```
-
-`withoutOverlapping()` skips a new run if the previous one is still in progress.
-`runInBackground()` returns the scheduler immediately without waiting for the command to finish.
 
 ---
 
 ## Database
 
 ```bash
-make migrate            # run pending migrations
-make migrate-fresh      # drop all + re-migrate + seed
-make seed               # seed only
+make migrate            # esegui migrazioni pendenti
+make migrate-fresh      # drop + re-migra + seed demo
+make seed               # solo seed
+```
+
+Bare-metal:
+
+```bash
+php artisan migrate
+php artisan migrate:fresh --seed
+php artisan db:seed
 ```
 
 ---
 
-## Assets
+## Comandi Artisan personalizzati
+
+### `scoring:run` — Calcola il ranking
 
 ```bash
-make npm-build          # production Vite build
-make npm-install        # install node_modules inside container
+php artisan scoring:run
+php artisan scoring:run --universe=NASDAQ
+php artisan scoring:run --universe=MIL --limit=50
+php artisan scoring:run --dry-run          # calcola senza salvare
+php artisan scoring:run --queue            # dispatcha come job in background
+```
+
+| Opzione | Default | Descrizione |
+|---|---|---|
+| `--universe` | `ALL` | Filtro mercato: `ALL`, `NASDAQ`, `NYSE`, `MIL`, … |
+| `--model-version` | da config | Sovrascrive la versione del modello |
+| `--limit` | — | Limita ai primi N titoli attivi |
+| `--dry-run` | false | Calcola senza persistere sul DB |
+| `--queue` | false | Dispatcha `RunScoringJob` sulla coda |
+
+### Comandi import dati (non ancora implementati)
+
+I seguenti comandi sono pianificati per l'integrazione con sorgenti dati esterne:
+
+```bash
+php artisan import:securities path/to/securities.csv
+php artisan import:price-bars path/to/prices.csv --security=AAPL
+php artisan import:fundamentals path/to/fundamentals.csv
+```
+
+Per ora i dati demo vengono popolati dai seeder (`DemoSecuritiesSeeder`).
+
+---
+
+## Queue worker
+
+```bash
+make queue-work
+# oppure, bare-metal:
+php artisan queue:work --tries=1 --timeout=660
+```
+
+Il driver predefinito è `database` — nessun Redis richiesto.
+Per produzione si consiglia di avviare il worker tramite Supervisor.
+
+---
+
+## Scheduler (aggiornamenti automatici)
+
+Lo scheduler esegue `scoring:run` ogni giorno alle 06:00 (configurabile).
+
+Aggiungi questa riga al crontab del sistema:
+
+```cron
+# Docker:
+* * * * * cd /path/to/project && docker compose exec -T app php artisan schedule:run >> /dev/null 2>&1
+
+# Bare-metal:
+* * * * * cd /path/to/project && php artisan schedule:run >> /dev/null 2>&1
+```
+
+Configura lo scheduling via `.env`:
+
+```env
+SCORING_SCHEDULE_ENABLED=true    # false per disabilitare
+SCORING_SCHEDULE_TIME=06:00      # orario HH:MM (24h)
+SCORING_SCHEDULE_UNIVERSE=ALL    # filtro universe
+```
+
+Verifica il prossimo run pianificato:
+
+```bash
+make artisan cmd="schedule:list"
+```
+
+---
+
+## Testing
+
+I test usano SQLite in-memory — nessun setup DB necessario.
+
+```bash
+make test                              # suite completa
+make test-filter filter=NormalizerTest # singolo test/classe
+# bare-metal:
+php artisan test
+php artisan test --filter=ExplanationBuilderTest
+```
+
+---
+
+## Build asset frontend
+
+```bash
+make npm-build   # build produzione
+make npm-install # installa node_modules nel container
+# bare-metal:
+npm run build
 ```
 
 ---
@@ -140,8 +227,41 @@ make npm-install        # install node_modules inside container
 ## Misc
 
 ```bash
-make artisan cmd="route:list"     # any artisan command
-make composer cmd="require foo"   # any composer command
+make artisan cmd="route:list"     # qualsiasi comando artisan
+make composer cmd="require foo"   # qualsiasi comando composer
 make cache-clear                  # php artisan optimize:clear
 make tinker                       # Laravel REPL
 ```
+
+---
+
+## Permessi storage (bare-metal)
+
+Se l'applicazione restituisce errori di scrittura:
+
+```bash
+chmod -R 775 storage bootstrap/cache
+chown -R www-data:www-data storage bootstrap/cache
+```
+
+---
+
+## Troubleshooting
+
+| Problema | Soluzione |
+|---|---|
+| `No application encryption key` | `php artisan key:generate` |
+| Errore connessione Redis | Imposta `CACHE_STORE=file` nel `.env` |
+| Pagine bianche / asset mancanti | `npm run build` oppure `make npm-build` |
+| Cache vecchia | `php artisan optimize:clear` oppure `make cache-clear` |
+| Queue non elabora job | Avvia `php artisan queue:work` o `make queue-work` |
+| Scoring non produce risultati | Verifica che esistano titoli attivi: `php artisan tinker` → `App\Models\Security::where('is_active',true)->count()` |
+
+---
+
+## Disclaimer
+
+Le informazioni fornite dalla piattaforma hanno esclusivamente scopo informativo e non costituiscono
+consulenza finanziaria personalizzata. I dati algoritmici e i ranking non garantiscono rendimenti futuri
+e non devono essere interpretati come raccomandazioni di acquisto o vendita di strumenti finanziari.
+Consulta sempre un consulente finanziario abilitato prima di prendere decisioni di investimento.
